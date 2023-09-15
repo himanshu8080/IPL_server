@@ -74,15 +74,14 @@ app.get('/fetch', async (req, res) => {
       const $element = $(element);
       const title = $element.find('h2.title.text-h2').text().trim();
       const titleLink = $element.find('div.body a').eq(1).attr('href').trim();
-      console.log(titleLink);
       const content = $element.find('div.body p').text().trim();
-      const pic = $element.find('div.body img').attr('src');
+      const img = $element.find('div.figure img').attr('src');
 
       const data = {
         title,
         titleLink,
         content,
-        pic,
+        img
       };
       item.push(data);
     });
