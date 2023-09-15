@@ -37,7 +37,8 @@ app.get('/fetch', async (req, res) => {
       item.push(data);
     });
 
-    latestNews.push(item);
+    latestNews =item ;
+
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(latestNews);
   } catch (error) {
