@@ -26,7 +26,8 @@ app.get('/fetch', async (req, res) => {
       const title = $element.find('h2.title.text-h2').text().trim();
       const titleLink = $element.find('div.body a').eq(1).attr('href').trim();
       const content = $element.find('div.body p').text().trim();
-      const imgURL = $element.find('div.figure img').attr('src');
+      const imgURL = $element.find('div.figure img').attr('data-src') || $element.find('div.figure img').attr('src');
+
 
       const data = {
         title,
