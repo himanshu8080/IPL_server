@@ -1,8 +1,14 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const PORT = process.env.PORT || 5000;
 const app = express();
 const cors = require('cors');
+const resource = {
+  name: 'example',
+  address: 'https://www.espncricinfo.com/cricket-news',
+  base:'https://www.espncricinfo.com/cricket-news'
+};
 
 app.use(cors({
   origin: '*',
@@ -13,35 +19,31 @@ app.use(cors({
 
 app.get('/fetch', async (req, res) => {
   try {
-    const browser = await puppeteer.launch({ headless: 'new'});
-    const page = await browser.newPage();
-    await page.goto('https://www.cricketlineguru.com/cricket-news');
-    await page.waitForSelector('div.item.small-card');
+    const response = await axios.get(resource.address);
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const latestNews = [];
 
-    const latestNews = await page.evaluate(() => {
-      const newsElements = Array.from(document.querySelectorAll('div.item.small-card'));
-      return newsElements.map((element) => {
-        const titleElement = element.querySelector('h3 a');
-        const title = titleElement ? titleElement.getAttribute('title') : '';
-        const titleLink = titleElement ? titleElement.getAttribute('href') : '';
-        const imgElement = element.querySelector('img');
-        const imgURL = imgElement ? imgElement.getAttribute('src') : '';
-        const infoElement = element.querySelector('div.info span:nth-child(2)');
-        const timestamp = infoElement ? infoElement.textContent.trim() : '';
-        const contentElement = element.querySelector('div.content p');
-        const content = contentElement ? contentElement.textContent.trim() : '';
+    $('.ds-border-b.ds-border-line.ds-p-4').each((index, element) => {
+      const title = $(element).find('h2.ds-text-title-s').text();
+      const titleLink = $(element).find('a').attr('href');
+      const img = $(element).find('img');
+      const imgAlt = img.attr('alt');
+      const imgURL = imgAlt === title ? titleLink : null; // Check if alt matches title
 
-        return {
-          title,
-          titleLink,
-          imgURL,
-          timestamp,
-          content,
-        };
-      });
+      const timestamp = $(element).find('span.ds-text-compact-xs').first().text();
+      const content = $(element).find('p.ds-text-compact-s.ds-text-typo-mid2.ds-mt-1 div').text();
+
+      const data = {
+        title,
+        titleLink,
+        imgURL:resource.base + imgURL,
+        timestamp,
+        content,
+      };
+
+      latestNews.push(data);
     });
-
-    await browser.close();
 
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(latestNews);
@@ -54,4 +56,3 @@ app.get('/fetch', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server started at ${PORT}`);
 });
-
