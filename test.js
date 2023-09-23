@@ -13,7 +13,7 @@ app.use(cors({
 
 app.get('/fetch', async (req, res) => {
   try {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ headless: 'new'});
     const page = await browser.newPage();
     await page.goto('https://www.cricketlineguru.com/cricket-news');
     await page.waitForSelector('div.item.small-card');
