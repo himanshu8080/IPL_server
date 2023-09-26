@@ -7,7 +7,7 @@ const cors = require('cors');
 const resource = {
   name: 'example',
   address: 'https://www.espncricinfo.com/cricket-news',
-  base:'https://www.espncricinfo.com/cricket-news'
+  base:'https://www.espncricinfo.com/'
 };
 
 app.use(cors({
