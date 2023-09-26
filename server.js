@@ -5,9 +5,9 @@ const PORT = process.env.PORT || 5000;
 const app = express();
 const cors = require('cors');
 const resource = {
-  name: 'example',
-  address: 'https://www.espncricinfo.com/cricket-news',
-  base:'https://www.espncricinfo.com/'
+
+  address: 'https://indianexpress.com/section/sports/cricket/',
+  base: 'https://indianexpress.com/section/sports/cricket/'
 };
 
 app.use(cors({
@@ -17,27 +17,26 @@ app.use(cors({
   optionsSuccessStatus: 204,
 }));
 
-app.get('/fetch', async (req, res) => {
+async function fetchNews() {
   try {
     const response = await axios.get(resource.address);
     const html = response.data;
     const $ = cheerio.load(html);
     const latestNews = [];
 
-    $('.ds-border-b.ds-border-line.ds-p-4').each((index, element) => {
-      const title = $(element).find('h2.ds-text-title-s').text();
-      const titleLink = $(element).find('a').attr('href');
-      const img = $(element).find('img');
-      const imgAlt = img.attr('alt');
-      const imgURL = imgAlt === title ? titleLink : null; // Check if alt matches title
-
-      const timestamp = $(element).find('span.ds-text-compact-xs').first().text();
-      const content = $(element).find('p.ds-text-compact-s.ds-text-typo-mid2.ds-mt-1 div').text();
+    $('.articles').each((index, element) => {
+      const article = $(element);
+      const title = article.find('h2.title a').attr('title');
+      const titleLink = article.find('h2.title a').attr('href');
+      const imgSrcset = article.find('div.snaps a img').attr('srcset');
+      const imgURL = imgSrcset ? imgSrcset.split(',').pop().split(' 1200w').shift() : '';
+      const timestamp = article.find('div.date').text();
+      const content = article.find('div.img-context p').text();
 
       const data = {
         title,
-        titleLink:resource.base + titleLink,
-        imgURL:resource.base + imgURL,
+        titleLink,
+        imgURL,
         timestamp,
         content,
       };
@@ -45,11 +44,20 @@ app.get('/fetch', async (req, res) => {
       latestNews.push(data);
     });
 
+    return latestNews;
+  } catch (error) {
+    console.error('Error:', error.message);
+    throw new Error('An error occurred while fetching data.');
+  }
+}
+
+app.get('/fetch', async (req, res) => {
+  try {
+    const latestNews = await fetchNews();
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(latestNews);
   } catch (error) {
-    console.error('Error:', error.message);
-    res.status(500).json({ error: 'An error occurred while fetching data.' });
+    res.status(500).json({ error: error.message });
   }
 });
 
