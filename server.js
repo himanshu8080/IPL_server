@@ -36,7 +36,7 @@ app.get('/fetch', async (req, res) => {
 
       const data = {
         title,
-        titleLink,
+        titleLink:resource.base + titleLink,
         imgURL:resource.base + imgURL,
         timestamp,
         content,
